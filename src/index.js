@@ -12,11 +12,11 @@ app.use((req, res, next) => {
 });
 
 
-// 代理 /api/app-api 到华佗云
+// 代理 /api/app-api 到 http://app-service:4000
 app.use(
     '/api/app-api',
     createProxyMiddleware({
-        target: 'https://app-service:4000',
+        target: 'http://app-service:4000',
         changeOrigin: true,
         pathRewrite: {
             '^/': '/api/app-api/',
