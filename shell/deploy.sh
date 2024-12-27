@@ -14,6 +14,14 @@ else
 fi
 echo "Current branch name is: $BRANCH_NAME" | tee -a $LOG_FILE
 
+# 检查是否提供了端口号参数
+if [ -z "$2" ]; then
+    PORT="7070"
+else
+    PORT="$2"
+fi
+echo "Current port number is: $PORT" | tee -a $LOG_FILE
+
 TIMESTAMP=$(date +"%Y%m%d%H%M%S")
 LOG_FILE="$LOG_DIR/deploy_$TIMESTAMP.log"
 
@@ -47,6 +55,14 @@ if ! command -v npm &> /dev/null; then
         echo "Failed to install Node.js and npm." | tee -a $LOG_FILE
         exit 1
     fi
+fi
+
+# 升级 npm
+echo "Upgrading npm..." | tee -a $LOG_FILE
+npm install -g npm 2>&1 | tee -a $LOG_FILE
+if ! command -v npm &> /dev/null; then
+    echo "Failed to upgrade npm." | tee -a $LOG_FILE
+    exit 1
 fi
 
 # 检查并安装 pm2
@@ -109,18 +125,18 @@ fi
 # fi
 
 # 检查是否存在 api-gateway 进程
-if pm2 list | grep -q "api-gateway"; then
-    echo "Stopping existing pm2 processes..." | tee -a $LOG_FILE
-    pm2 stop api-gateway 2>&1 | tee -a $LOG_FILE
+if pm2 list | grep -q "api-gateway-$PORT"; then
+    echo "Stopping existing pm2 processes for port $PORT..." | tee -a $LOG_FILE
+    pm2 stop api-gateway-$PORT 2>&1 | tee -a $LOG_FILE
 else
-    echo "No existing pm2 process named 'api-gateway' found. Skipping stop command." | tee -a $LOG_FILE
+    echo "No existing pm2 process named 'api-gateway-$PORT' found. Skipping stop command." | tee -a $LOG_FILE
 fi
 
 # 启动服务
-echo "Starting service with pm2..." | tee -a $LOG_FILE
-pm2 start src/index.js --name api-gateway 2>&1 | tee -a $LOG_FILE
+echo "Starting service with pm2 on port $PORT..." | tee -a $LOG_FILE
+pm2 start src/index.js --name api-gateway-$PORT --env PORT=$PORT 2>&1 | tee -a $LOG_FILE
 if [ $? -ne 0 ]; then
-    echo "Failed to start service with pm2." | tee -a $LOG_FILE
+    echo "Failed to start service with pm2 on port $PORT." | tee -a $LOG_FILE
     exit 1
 fi
 

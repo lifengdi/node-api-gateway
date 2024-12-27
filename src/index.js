@@ -5,6 +5,11 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// 定义默认请求头
+const defaultHeaders = {
+    'X-APP-PACKAGE-NAME': 'your_default_package_name' // 根据需要添加其他默认请求头
+};
+
 // // 全局中间件，为所有请求添加默认请求头
 app.use((req, res, next) => {
     req.headers['X-API-GATEWAY'] = 'NODE-1.0';
@@ -23,6 +28,12 @@ app.use(
         },
         on: {
             proxyReq: (proxyReq, req, res) => {
+                // 检查并添加默认请求头
+                Object.keys(defaultHeaders).forEach(key => {
+                    if (!proxyReq.getHeader(key)) {
+                        proxyReq.setHeader(key, defaultHeaders[key]);
+                    }
+                });
                 // 添加自定义请求头
                 // proxyReq.setHeader('X-APP-PACKAGE-NAME', 'werq.asdf');
                 console.log('onProxyReq called for /api/app-api');
