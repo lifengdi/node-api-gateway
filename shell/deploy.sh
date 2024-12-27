@@ -94,10 +94,19 @@ if [ ! -d "$PROJECT_DIR/.git" ]; then
     fi
 else
     echo "Repository already exists, pulling latest changes from branch $BRANCH_NAME..." | tee -a $LOG_FILE
+    git fetch origin 2>&1 | tee -a $LOG_FILE
+    if [ $? -ne 0 ]; then
+        echo "Failed to fetch latest changes from origin." | tee -a $LOG_FILE
+        exit 1
+    fi
     git checkout $BRANCH_NAME 2>&1 | tee -a $LOG_FILE
+    if [ $? -ne 0 ]; then
+        echo "Failed to checkout branch $BRANCH_NAME." | tee -a $LOG_FILE
+        exit 1
+    fi
     git pull origin $BRANCH_NAME 2>&1 | tee -a $LOG_FILE
     if [ $? -ne 0 ]; then
-        echo "Failed to pull latest changes." | tee -a $LOG_FILE
+        echo "Failed to pull latest changes from branch $BRANCH_NAME." | tee -a $LOG_FILE
         exit 1
     fi
 fi
@@ -134,6 +143,8 @@ fi
 
 # 启动服务
 echo "Starting service with pm2 on port $PORT..." | tee -a $LOG_FILE
+export PORT=$PORT  # 确保 PORT 环境变量已设置
+echo "Current PORT value: $PORT" | tee -a $LOG_FILE  # 输出 PORT 变量值以供调试
 pm2 start src/index.js --name api-gateway-$PORT --env PORT=$PORT 2>&1 | tee -a $LOG_FILE
 if [ $? -ne 0 ]; then
     echo "Failed to start service with pm2 on port $PORT." | tee -a $LOG_FILE

@@ -5,6 +5,6 @@ nodejs开发的api网关
 
 示例：
 ```shell
-./deploy.sh 'branchName'
+./deploy.sh 'branchName' 7071
 ```
 不传分支名则按照`main`分支部署
